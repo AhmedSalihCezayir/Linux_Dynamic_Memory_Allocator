@@ -3,6 +3,7 @@
 
 // Variables
 int* p;
+int segment_size;
 
 // Functions
 int dma_init (int m);
@@ -13,4 +14,5 @@ void dma_print_bitmap();
 void dma_print_blocks();
 int dma_give_intfrag();
 
+int one_count();
 #endif
