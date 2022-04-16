@@ -101,7 +101,18 @@ void dma_free (void *target_loc){
 
 // void  dma_print_page(int pno);
 
-// void  dma_print_bitmap(){};
+void dma_print_bitmap(){
+    for(int i = 0; i < (int) pow(2, power_m-6); i++){
+        if( i != 0 && i % 8 == 0){
+            printf(" ");
+            if(i % 64 == 0){
+                printf("\n");
+            }
+        }
+        printf("%d",p[i]);
+    }
+    printf("\n");
+}
 
 // void  dma_print_blocks();
 
