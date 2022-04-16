@@ -6,12 +6,16 @@
 #include <unistd.h>
 
 int dma_init (int m){
+    power_m = m;
+
     if (m < 14 || m > 22) {  // if m input is wrong
          return -1;
     }
 
     int size = (int) pow(2, m); // Calculate necessary size for bitmap
     p = mmap (NULL, (size_t) size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0); // Returns start adress of segment
+
+    seg_start = p;
 
     if (*p == -1) { // If mmap fails
         return -1;
@@ -50,29 +54,28 @@ void *dma_alloc (int size){
     int hexa_size = size;
 
     if(size % 16 != 0){ // Size will be equalized to upper multiple of 16
+        frag_size += 16 - (size % 16); // Fragmentation size updated
         int div = size / 16;
         hexa_size = (div + 1) * 16;
     }
 
     for(int i = 0; i < segment_size; i = i + 2){
-        if(p[i] == 1 && p[i+1] == 1 && one_count(p + i) >= (hexa_size / 8) ){
-            printf("*** start of if: %d \n", i);
+        if(p[i] == 1 && p[i+1] == 1 && one_count(p + i) >= (hexa_size / 8) ) {
             p[i] = 0;
             p[i+1] = 1;
-            printf("*** p[i]: %d \n", p[i]);
             int start_point = i + 2;
 
-            for(int k = start_point; (hexa_size / 8) - 2 > 0 ; k++){ // ! In case of problem with allocation, this might be doing odd numbered iterations
+            for(int k = start_point; (hexa_size / 8) - 2 > 0 ; k++) { 
                 p[k] = 0;
                 hexa_size = hexa_size - 8;
             }
-            
-            return p + i;
+            return p + (8 * i); 
         }
     }
     return NULL;
 }
 
+// dma_free helper function
 int one_count(int* p){
     int i = 0;
     int count = 0;
@@ -83,13 +86,22 @@ int one_count(int* p){
     return count;
 }
 
-// void  dma_free (void *p);
+void dma_free (void *target_loc){
+    int i = ( (int*) target_loc - seg_start) / 8;
+
+    if(p[i] == 0 && p[i+1] == 1){
+        do{
+            p[i] = 1;
+            p[i + 1] = 1;
+            i = i + 2;
+        }
+        while (!(p[i] == 1 && p[i+1] == 1) && !(p[i] == 0 && p[i+1] == 1) );
+    }
+}
 
 // void  dma_print_page(int pno);
 
-// void  dma_print_bitmap(){
-    
-// };
+// void  dma_print_bitmap(){};
 
 // void  dma_print_blocks();
 

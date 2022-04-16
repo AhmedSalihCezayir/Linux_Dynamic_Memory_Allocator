@@ -3,7 +3,11 @@
 
 // Variables
 int* p;
+int* seg_start;
+
+int power_m;
 int segment_size;
+int frag_size;
 
 // Functions
 int dma_init (int m);
