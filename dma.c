@@ -15,9 +15,9 @@ int dma_init (int m){
     int size = (int) pow(2, m); // Calculate necessary size for bitmap
     p = mmap (NULL, (size_t) size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0); // Returns start adress of segment
 
-    seg_start = p;
+    seg_start = ((int*)p);
 
-    if (*p == -1) { // If mmap fails
+    if ((long long) p == -1) { // If mmap fails
         return -1;
     }
 
@@ -25,25 +25,25 @@ int dma_init (int m){
         // Initilize heap and fill with 1 to show that it's empty, expect first 2 word bcs they are start words of bitmap
         int heap_word_count = (int) pow(2, m-3);
         segment_size = heap_word_count;
-        p[0] = 0;
-        p[1] = 1;
+        ((int*)p)[0] = 0;
+        ((int*)p)[1] = 1;
 
         for(int i = 2; i < heap_word_count; i++){
-            p[i] = 1;
+            ((int*)p)[i] = 1;
         }
 
         // Fill portion of bitmap which represent itself + reserved area
         int bitmap_self_word_count = (int) pow(2, m-9);
 
         for(int i = 2; i < bitmap_self_word_count; i++){
-            p[i] = 0;
+            ((int*)p)[i] = 0;
         }
 
-        p[bitmap_self_word_count] = 0;
-        p[bitmap_self_word_count + 1] = 1;
+        ((int*)p)[bitmap_self_word_count] = 0;
+        ((int*)p)[bitmap_self_word_count + 1] = 1;
 
         for(int i = bitmap_self_word_count + 2; i < bitmap_self_word_count + 32; i++){
-            p[i] = 0;
+            ((int*)p)[i] = 0;
         }
 
         return 0;
@@ -60,16 +60,16 @@ void *dma_alloc (int size){
     }
 
     for(int i = 0; i < segment_size; i = i + 2){
-        if(p[i] == 1 && p[i+1] == 1 && one_count(p + i) >= (hexa_size / 8) ) {
-            p[i] = 0;
-            p[i+1] = 1;
+        if( ((int*)p)[i] == 1 && ((int*)p)[i+1] == 1 && one_count( ((int*)p) + i) >= (hexa_size / 8) ) {
+            ((int*)p)[i] = 0;
+            ((int*)p)[i+1] = 1;
             int start_point = i + 2;
 
             for(int k = start_point; (hexa_size / 8) - 2 > 0 ; k++) { 
-                p[k] = 0;
+                ((int*)p)[k] = 0;
                 hexa_size = hexa_size - 8;
             }
-            return p + (8 * i); 
+            return (void*) (p + (8 * i)); 
         }
     }
     return NULL;
@@ -89,17 +89,36 @@ int one_count(int* p){
 void dma_free (void *target_loc){
     int i = ( (int*) target_loc - seg_start) / 8;
 
-    if(p[i] == 0 && p[i+1] == 1){
+    if( ((int*)p)[i] == 0 && ((int*)p)[i+1] == 1){
         do{
-            p[i] = 1;
-            p[i + 1] = 1;
+            ((int*)p)[i] = 1;
+            ((int*)p)[i + 1] = 1;
             i = i + 2;
         }
-        while (!(p[i] == 1 && p[i+1] == 1) && !(p[i] == 0 && p[i+1] == 1) );
+        while (!( ((int*)p)[i] == 1 && ((int*)p)[i+1] == 1) && !( ((int*)p)[i] == 0 && ((int*)p)[i+1] == 1) );
     }
 }
 
-// void dma_print_page(int pno){}
+void dma_print_page(int pno){
+    // unsigned long long start_pos = ((unsigned long long int)p) + pno * (int) pow(2, 12);
+    // unsigned long long end_pos = start_pos + (unsigned long long) pow(2, 12);
+    // int count = 0;
+    // char string[4]; 
+    
+    // for(unsigned long long i = (start_pos - (long long int) seg_start) / 8 ; i < segment_size && i < (end_pos - (long long int) seg_start) / 8; i++){
+    //     if(count % 64 == 0){
+    //         printf("\n");
+    //     }
+
+    //     string[i % 4] = seg_start[i];
+        
+    //     if(count % 4 == 0){
+    //         printf("%s\n", string);
+    //         cur = NULL;
+    //     }
+    //     count++;
+    // }
+}
 
 void dma_print_bitmap(){
     for(int i = 0; i < (int) pow(2, power_m-6); i++){
@@ -109,7 +128,7 @@ void dma_print_bitmap(){
                 printf("\n");
             }
         }
-        printf("%d",p[i]);
+        printf("%d", ((int*)p)[i]);
     }
     printf("\n");
 }
@@ -144,3 +163,5 @@ void dma_print_blocks(){
 int dma_give_intfrag(){
     return frag_size;
 }
+
+

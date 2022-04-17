@@ -2,7 +2,7 @@
 #define DMA_H
 
 // Variables
-int* p;
+void* p;
 int* seg_start;
 
 int power_m;
@@ -18,5 +18,5 @@ void dma_print_bitmap();
 void dma_print_blocks();
 int dma_give_intfrag();
 
-int one_count();
+int one_count(int* p);
 #endif
