@@ -128,6 +128,7 @@ void dma_free (void *target_loc){
 
 void dma_print_page(int pno){
     unsigned long long start_pos = ((unsigned long long int)p) + pno * (int) pow(2, 12);
+    pthread_mutex_lock(&p_lock);
     for(unsigned long long i = (start_pos - (long long int) seg_start) / 8 ; i * 8 < segment_size; i = i + 4){
         if(i % 256 == 0){
             printf("\n");
@@ -144,6 +145,7 @@ void dma_print_page(int pno){
         // Print the integer as hexadecimal
         printf("%x", value);    
     }
+    pthread_mutex_unlock(&p_lock);
 }
 
 void dma_print_bitmap(){
