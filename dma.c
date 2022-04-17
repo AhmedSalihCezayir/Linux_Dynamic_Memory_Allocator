@@ -6,16 +6,26 @@
 #include <unistd.h>
 
 int dma_init (int m){
-    power_m = m;
+    pthread_mutex_init(&p_lock, NULL);
+    pthread_mutex_init(&power_m_lock, NULL);
+    pthread_mutex_init(&segment_size_lock, NULL);
+    pthread_mutex_init(&frag_size_lock, NULL);
 
+    pthread_mutex_lock(&power_m_lock);
+    power_m = m;
+    pthread_mutex_unlock(&power_m_lock);
+    
     if (m < 14 || m > 22) {  // if m input is wrong
          return -1;
     }
 
     int size = (int) pow(2, m); // Calculate necessary size for bitmap
-    p = mmap (NULL, (size_t) size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0); // Returns start adress of segment
 
+    pthread_mutex_lock(&p_lock);
+    p = mmap (NULL, (size_t) size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0); // Returns start adress of segment
+    
     seg_start = ((int*)p);
+    pthread_mutex_unlock(&p_lock);
 
     if ((long long) p == -1) { // If mmap fails
         return -1;
@@ -24,7 +34,12 @@ int dma_init (int m){
     else {
         // Initilize heap and fill with 1 to show that it's empty, expect first 2 word bcs they are start words of bitmap
         int heap_word_count = (int) pow(2, m-3);
+
+        pthread_mutex_lock(&segment_size_lock);
         segment_size = heap_word_count;
+        pthread_mutex_lock(&segment_size_lock);
+
+        pthread_mutex_lock(&p_lock);
         ((int*)p)[0] = 0;
         ((int*)p)[1] = 1;
 
@@ -45,21 +60,28 @@ int dma_init (int m){
         for(int i = bitmap_self_word_count + 2; i < bitmap_self_word_count + 32; i++){
             ((int*)p)[i] = 0;
         }
-
+        pthread_mutex_unlock(&p_lock);
         return 0;
     }
 }
 
 void *dma_alloc (int size){
     int hexa_size = size;
+    void* allocated = NULL;
 
     if(size % 16 != 0){ // Size will be equalized to upper multiple of 16
+
+        pthread_mutex_lock(&frag_size_lock);
         frag_size += 16 - (size % 16); // Fragmentation size updated
+        pthread_mutex_unlock(&frag_size_lock);
+
         int div = size / 16;
         hexa_size = (div + 1) * 16;
     }
 
+
     for(int i = 0; i < segment_size; i = i + 2){
+        pthread_mutex_lock(&p_lock);
         if( ((int*)p)[i] == 1 && ((int*)p)[i+1] == 1 && one_count( ((int*)p) + i) >= (hexa_size / 8) ) {
             ((int*)p)[i] = 0;
             ((int*)p)[i+1] = 1;
@@ -69,10 +91,12 @@ void *dma_alloc (int size){
                 ((int*)p)[k] = 0;
                 hexa_size = hexa_size - 8;
             }
-            return (void*) (p + (8 * i)); 
+            allocated = (void*) (p + (8 * i));
+            break; 
         }
+        pthread_mutex_unlock(&p_lock);
     }
-    return NULL;
+    return allocated;
 }
 
 // dma_free helper function
@@ -87,8 +111,9 @@ int one_count(int* p){
 }
 
 void dma_free (void *target_loc){
-    int i = ( (int*) target_loc - seg_start) / 8;
 
+    pthread_mutex_lock(&p_lock);
+    int i = ( (int*) target_loc - seg_start) / 8;
     if( ((int*)p)[i] == 0 && ((int*)p)[i+1] == 1){
         do{
             ((int*)p)[i] = 1;
@@ -97,6 +122,7 @@ void dma_free (void *target_loc){
         }
         while (!( ((int*)p)[i] == 1 && ((int*)p)[i+1] == 1) && !( ((int*)p)[i] == 0 && ((int*)p)[i+1] == 1) );
     }
+    pthread_mutex_unlock(&p_lock);
 }
 
 void dma_print_page(int pno){
@@ -128,16 +154,18 @@ void dma_print_bitmap(){
                 printf("\n");
             }
         }
+        pthread_mutex_lock(&p_lock);
         printf("%d", ((int*)p)[i]);
+        pthread_mutex_unlock(&p_lock);
     }
     printf("\n");
 }
 
 void dma_print_blocks(){
-    printf("p: %lx\n", (long) seg_start);
     int size;
     unsigned long long address;
 
+    pthread_mutex_lock(&p_lock);
     for(int i = 0; i < segment_size;){
         if(seg_start[i] == 1 && seg_start[i+1] == 1){
             int j;
@@ -158,6 +186,7 @@ void dma_print_blocks(){
             i = j;
         }
     }
+    pthread_mutex_unlock(&p_lock);
 }
 
 int dma_give_intfrag(){

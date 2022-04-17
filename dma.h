@@ -1,6 +1,8 @@
 #ifndef DMA_H
 #define DMA_H
 
+#include <pthread.h>
+
 // Variables
 void* p;
 int* seg_start;
@@ -8,6 +10,11 @@ int* seg_start;
 int power_m;
 int segment_size;
 int frag_size;
+
+pthread_mutex_t p_lock;
+pthread_mutex_t power_m_lock;
+pthread_mutex_t segment_size_lock;
+pthread_mutex_t frag_size_lock;
 
 // Functions
 int dma_init (int m);
