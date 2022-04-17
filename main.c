@@ -8,16 +8,22 @@
 
 
 int main(){
-    dma_init(14);
+    dma_init(18);
     
-    int* point;
-    point = dma_alloc(8);
+    void* p1 = dma_alloc(256);
+    void* p2 = dma_alloc(24);
+    void* p3 = dma_alloc(7);
+
+    dma_print_blocks();
+    dma_print_bitmap();
     
     // for(int i = 0; i < pow(2,8); i++){
     //     printf("%d: %d\n", i, p[i]);
     // }
 
-    //dma_free(point);
+    dma_free(p1);
+    dma_free(p2);
+    dma_free(p3);
     
     // for(int i = 0; i < pow(2,8); i++){
     //     printf("%d: %d\n", i, p[i]);
@@ -25,13 +31,12 @@ int main(){
 
     //dma_print_bitmap();
 
-    *point = 25;
     // printf("******************************\n");
     
     // dma_print_blocks();
     // printf("%p\n", p);
 
-    dma_print_page(0);
-
+    dma_print_blocks();
+    dma_print_bitmap();
     return 0;
 }

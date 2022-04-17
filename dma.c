@@ -123,24 +123,26 @@ void dma_free (void *target_loc){
 }
 
 void dma_print_page(int pno){
-    // unsigned long long start_pos = ((unsigned long long int)p) + pno * (int) pow(2, 12);
-    // unsigned long long end_pos = start_pos + (unsigned long long) pow(2, 12);
-    // int count = 0;
-    // char string[4]; 
+    unsigned long long start_pos = ((unsigned long long int)p) + pno * (int) pow(2, 12);
+    unsigned long long end_pos = start_pos + (unsigned long long) pow(2, 12);
     
-    // for(unsigned long long i = (start_pos - (long long int) seg_start) / 8 ; i < segment_size && i < (end_pos - (long long int) seg_start) / 8; i++){
-    //     if(count % 64 == 0){
-    //         printf("\n");
-    //     }
+    for(unsigned long long i = (start_pos - (long long int) seg_start) / 8 ; i < segment_size && i < (end_pos - (long long int) seg_start) / 8; i = i + 4){
+        if(i % 64 == 0){
+            printf("\n");
+        }
+        char* binaryString;
+        for (int k = 0; k < 4; k++) {
+            char chr = ((int*) p)[i + k] + '0';
+            binaryString[k] = chr;
+        }
+        //printf("%s\n", binaryString);
+        // convert binary string to integer
+        int value = (int)strtol(binaryString, NULL, 2);
 
-    //     string[i % 4] = seg_start[i];
-        
-    //     if(count % 4 == 0){
-    //         printf("%s\n", string);
-    //         cur = NULL;
-    //     }
-    //     count++;
-    // }
+        // output hex string
+        printf("%x", value);
+            
+    }
 }
 
 void dma_print_bitmap(){
