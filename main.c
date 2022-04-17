@@ -16,7 +16,7 @@ int main(){
     //     printf("%d: %d\n", i, p[i]);
     // }
 
-    printf("******************************\n");
+    
 
     //dma_free(point);
     
@@ -25,6 +25,10 @@ int main(){
     // }
 
     dma_print_bitmap();
+
+    printf("******************************\n");
+    
+    dma_print_blocks();
 
     return 0;
 }

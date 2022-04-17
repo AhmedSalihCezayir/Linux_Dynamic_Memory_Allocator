@@ -99,7 +99,7 @@ void dma_free (void *target_loc){
     }
 }
 
-// void  dma_print_page(int pno);
+// void dma_print_page(int pno){}
 
 void dma_print_bitmap(){
     for(int i = 0; i < (int) pow(2, power_m-6); i++){
@@ -114,6 +114,32 @@ void dma_print_bitmap(){
     printf("\n");
 }
 
-// void  dma_print_blocks();
+void dma_print_blocks(){
+    int size;
+    int address;
 
-// int   dma_give_intfrag();
+    for(int i = 0; i < segment_size;){
+        if(seg_start[i] == 1 && seg_start[i+1] == 1){
+            int j;
+            for(j = i + 2; seg_start[j] != 0; j++){
+            }
+            size = (j - i) * 8;
+            address = p + (8 * i);
+            printf("F, 0x%016x, 0x%x, (%d)\n", address, size, size);
+            i = j;
+        }
+        else if(seg_start[i] == 0 && seg_start[i+1] == 1){
+            int j;
+            for(j = i + 2; seg_start[j] == 0 && seg_start[j+1] == 0; j = j + 2){
+            }
+            size = (j - i) * 8;
+            address = p + (8 * i);
+            printf("A, 0x%016x, 0x%x, (%d)\n", address, size, size);
+            i = j;
+        }
+    }
+}
+
+int dma_give_intfrag(){
+    return frag_size;
+}
