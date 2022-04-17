@@ -37,7 +37,7 @@ int dma_init (int m){
 
         pthread_mutex_lock(&segment_size_lock);
         segment_size = heap_word_count;
-        pthread_mutex_lock(&segment_size_lock);
+        pthread_mutex_unlock(&segment_size_lock);
 
         pthread_mutex_lock(&p_lock);
         ((int*)p)[0] = 0;
@@ -70,7 +70,6 @@ void *dma_alloc (int size){
     void* allocated = NULL;
 
     if(size % 16 != 0){ // Size will be equalized to upper multiple of 16
-
         pthread_mutex_lock(&frag_size_lock);
         frag_size += 16 - (size % 16); // Fragmentation size updated
         pthread_mutex_unlock(&frag_size_lock);
@@ -78,7 +77,6 @@ void *dma_alloc (int size){
         int div = size / 16;
         hexa_size = (div + 1) * 16;
     }
-
 
     for(int i = 0; i < segment_size; i = i + 2){
         pthread_mutex_lock(&p_lock);
@@ -91,7 +89,7 @@ void *dma_alloc (int size){
                 ((int*)p)[k] = 0;
                 hexa_size = hexa_size - 8;
             }
-            allocated = (void*) (p + (8 * i));
+            allocated = (void*) ((int*)p + (8 * i));
             break; 
         }
         pthread_mutex_unlock(&p_lock);
@@ -111,18 +109,17 @@ int one_count(int* p){
 }
 
 void dma_free (void *target_loc){
+    int i = ( (int*) target_loc - (int*) p) / 8;
 
-    pthread_mutex_lock(&p_lock);
-    int i = ( (int*) target_loc - seg_start) / 8;
-    if( ((int*)p)[i] == 0 && ((int*)p)[i+1] == 1){
+    if(seg_start[i] == 0 && seg_start[i+1] == 1){
+        printf("hello");
         do{
-            ((int*)p)[i] = 1;
-            ((int*)p)[i + 1] = 1;
+            seg_start[i] = 1;
+            seg_start[i + 1] = 1;
             i = i + 2;
         }
-        while (!( ((int*)p)[i] == 1 && ((int*)p)[i+1] == 1) && !( ((int*)p)[i] == 0 && ((int*)p)[i+1] == 1) );
+        while (!(seg_start[i] == 1 && seg_start[i+1] == 1) && !(seg_start[i] == 0 && seg_start[i+1] == 1) );
     }
-    pthread_mutex_unlock(&p_lock);
 }
 
 void dma_print_page(int pno){
