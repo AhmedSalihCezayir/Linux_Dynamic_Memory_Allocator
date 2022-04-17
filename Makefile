@@ -1,11 +1,11 @@
-all: libdma.a  main
+all: libdma.a  app
 
 libdma.a: dma.c
 	gcc -Wall -g -c dma.c
 	ar rcs libdma.a dma.o 
 
-main: main.c
-	gcc -Wall -g -o main main.c -L. -ldma -lm
+app: app.c
+	gcc -Wall -g -o app app.c -L. -ldma -lm
 
 clean:
-	rm -fr *~ libdma.a dma.o main.o main
+	rm -fr *~ libdma.a dma.o app.o app

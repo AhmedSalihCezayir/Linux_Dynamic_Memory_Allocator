@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <sys/time.h>
 
 double calculateTime(){
     struct timeval currentTime;
@@ -16,13 +17,12 @@ double calculateTime(){
 
 int main(){
 
-    dma_init(18);
+    dma_init(18); 
 
-//*******************************************
 //***************FROM LOW TO HIGH************
-//*******************************************
+//*------------------------------------------
 
-    printf("\n************\n FROM LOW TO HIGH \n************\n");
+    printf("\nFROM LOW TO HIGH \n----------\n");
     printf("\nALLOC TESTS\n");
 
 //---------- ALLOC tests ----------
@@ -100,13 +100,12 @@ int main(){
     printf("time needed for 65536 byte deallocation: %.5f \n", after65k - before65k);
     printf("time needed for 131072 byte deallocation: %.5f \n", after131k - before131k);
 
-//********************************************
 //*************FROM HIGH TO LOW***************
-//********************************************
+//*------------------------------------------
 
 //---------- ALLOC tests ----------
 
-    printf("\n************\n FROM HIGH TO LOW \n************\n");
+    printf("\nFROM HIGH TO LOW\n--------\n");
     printf("\nALLOC TESTS\n");
 
     before131k = calculateTime();
@@ -175,24 +174,67 @@ int main(){
     printf("time needed for 65536 byte deallocation: %.5f \n", after65k - before65k);
     printf("time needed for 131072 byte deallocation: %.5f \n", after131k - before131k);
 
-//-----------------------------------------------
+//******************************
+//******FRAGMENTATION PART******
+//******************************  
+    printf("**********\n FRAGMENTATION PART \n************\n ");
 
-    // for(int i = 0; i < pow(2,8); i++){
-    //     printf("%d: %d\n", i, p[i]);
-    // }
+    dma_init(18);
 
-    // dma_free(point);
+//--------- CHOSEN INPUTS------------
+    printf("\nCHOSEN INPUTS\n-----------\n ");
+
+    int before500 = dma_give_intfrag();
+    void* point500 = dma_alloc(500);
+    int after500 = dma_give_intfrag();
+
+    int beforek = dma_give_intfrag();
+    void* pointk = dma_alloc(1000);
+    int afterk = dma_give_intfrag();
+
+    int before25k = dma_give_intfrag();
+    void* point25k = dma_alloc(2500);
+    int after25k = dma_give_intfrag();
+
+    int before5k = dma_give_intfrag();
+    void* point5k = dma_alloc(5000);
+    int after5k = dma_give_intfrag();
     
-    // for(int i = 0; i < pow(2,8); i++){
-    //     printf("%d: %d\n", i, p[i]);
-    // }
+    int before10k = dma_give_intfrag();
+    void* point10k = dma_alloc(10000);
+    int after10k = dma_give_intfrag();
 
-    //dma_print_bitmap();
-    
-    // dma_print_blocks();
-    // printf("%p\n", p);
+    int before15k = dma_give_intfrag();
+    void* point15k = dma_alloc(15000);
+    int after15k = dma_give_intfrag();
 
-    // dma_print_page(0);
+    printf("fragmentation amount for 500 byte allocation/total fragmentation so far: %d, %d \n", after500 - before500, after500);
+    printf("fragmentation amount for 1000 byte allocation/total fragmentation so far: %d, %d \n", afterk - beforek, afterk);
+    printf("fragmentation amount for 2500 byte allocation/total fragmentation so far: %d, %d \n", after25k - before25k, after25k);
+    printf("fragmentation amount for 5000 byte allocation/total fragmentation so far: %d, %d \n", after5k - before5k, after5k);
+    printf("fragmentation amount for 10000 byte allocation/total fragmentation so far: %d, %d \n", after10k - before10k, after10k);
+    printf("fragmentation amount for 15000 byte allocation/total fragmentation so far: %d, %d \n", after15k - before15k, after15k);
 
+    dma_print_bitmap();
+    dma_print_blocks();
+    dma_print_page(0);
+
+    dma_free(point500);
+    dma_free(pointk);
+    dma_free(point25k);
+    dma_free(point5k);
+    dma_free(point10k);
+    dma_free(point15k);
+
+
+//------------ RANDOM INPUTS------------------
+    printf("\nRANDOM INPUTS\n-----------\n ");
+
+    srand(time(NULL));
+    for(int i = 0; i < 15; i++){
+        int random = rand() % 3001;
+        dma_alloc(random);
+        printf("allocated byte this run: %d, current fragmentation total: %d\n", random, dma_give_intfrag());
+    }
     return 0;
 }

@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+
 int dma_init (int m){
     pthread_mutex_init(&p_lock, NULL);
     pthread_mutex_init(&power_m_lock, NULL);
@@ -12,6 +13,7 @@ int dma_init (int m){
     pthread_mutex_init(&frag_size_lock, NULL);
 
     pthread_mutex_lock(&power_m_lock);
+    frag_size = 0;
     power_m = m;
     pthread_mutex_unlock(&power_m_lock);
     
@@ -115,7 +117,6 @@ void dma_free (void *target_loc){
         printf("MEMORY ACCESS VIOLATION !!!!!!\n");
     }
     else if(seg_start[i] == 0 && seg_start[i+1] == 1) {
-        printf("hello");
         do{
             seg_start[i] = 1;
             seg_start[i + 1] = 1;
@@ -127,7 +128,6 @@ void dma_free (void *target_loc){
 
 void dma_print_page(int pno){
     unsigned long long start_pos = ((unsigned long long int)p) + pno * (int) pow(2, 12);
-    unsigned long long end_pos = start_pos + (int) pow(2, 12);
     for(unsigned long long i = (start_pos - (long long int) seg_start) / 8 ; i * 8 < segment_size; i = i + 4){
         if(i % 256 == 0){
             printf("\n");
