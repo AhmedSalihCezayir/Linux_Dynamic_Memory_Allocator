@@ -111,7 +111,10 @@ int one_count(int* p){
 void dma_free (void *target_loc){
     int i = ( (int*) target_loc - (int*) p) / 8;
 
-    if(seg_start[i] == 0 && seg_start[i+1] == 1){
+    if(i > segment_size){
+        printf("MEMORY ACCESS VIOLATION !!!!!!\n");
+    }
+    else if(seg_start[i] == 0 && seg_start[i+1] == 1) {
         printf("hello");
         do{
             seg_start[i] = 1;
@@ -124,24 +127,22 @@ void dma_free (void *target_loc){
 
 void dma_print_page(int pno){
     unsigned long long start_pos = ((unsigned long long int)p) + pno * (int) pow(2, 12);
-    unsigned long long end_pos = start_pos + (unsigned long long) pow(2, 12);
-    
-    for(unsigned long long i = (start_pos - (long long int) seg_start) / 8 ; i < segment_size && i < (end_pos - (long long int) seg_start) / 8; i = i + 4){
-        if(i % 64 == 0){
+    unsigned long long end_pos = start_pos + (int) pow(2, 12);
+    for(unsigned long long i = (start_pos - (long long int) seg_start) / 8 ; i * 8 < segment_size; i = i + 4){
+        if(i % 256 == 0){
             printf("\n");
         }
-        char* binaryString;
+        char binaryString[4];
         for (int k = 0; k < 4; k++) {
             char chr = ((int*) p)[i + k] + '0';
             binaryString[k] = chr;
         }
-        //printf("%s\n", binaryString);
-        // convert binary string to integer
+
+        // Convert binary string to integer
         int value = (int)strtol(binaryString, NULL, 2);
 
-        // output hex string
-        printf("%x", value);
-            
+        // Print the integer as hexadecimal
+        printf("%x", value);    
     }
 }
 
