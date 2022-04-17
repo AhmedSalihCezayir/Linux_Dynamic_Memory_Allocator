@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <pthread.h>
 
 
 int main(){
@@ -29,6 +30,5 @@ int main(){
     printf("******************************\n");
     
     dma_print_blocks();
-
     return 0;
 }

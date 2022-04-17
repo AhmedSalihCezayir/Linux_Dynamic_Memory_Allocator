@@ -115,8 +115,9 @@ void dma_print_bitmap(){
 }
 
 void dma_print_blocks(){
+    printf("p: %lx\n", (long) seg_start);
     int size;
-    int address;
+    unsigned long long address;
 
     for(int i = 0; i < segment_size;){
         if(seg_start[i] == 1 && seg_start[i+1] == 1){
@@ -124,8 +125,8 @@ void dma_print_blocks(){
             for(j = i + 2; seg_start[j] != 0; j++){
             }
             size = (j - i) * 8;
-            address = p + (8 * i);
-            printf("F, 0x%016x, 0x%x, (%d)\n", address, size, size);
+            address = (unsigned long long) (p + (8 * i));
+            printf("F, 0x%016llx, 0x%x, (%d)\n", address, size, size);
             i = j;
         }
         else if(seg_start[i] == 0 && seg_start[i+1] == 1){
@@ -133,8 +134,8 @@ void dma_print_blocks(){
             for(j = i + 2; seg_start[j] == 0 && seg_start[j+1] == 0; j = j + 2){
             }
             size = (j - i) * 8;
-            address = p + (8 * i);
-            printf("A, 0x%016x, 0x%x, (%d)\n", address, size, size);
+            address = (unsigned long long) (p + (8 * i));
+            printf("A, 0x%016llx, 0x%x, (%d)\n", address, size, size);
             i = j;
         }
     }
